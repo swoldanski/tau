@@ -129,12 +129,16 @@ image with a newer `TAU_VERSION` or pull a newer published image.
 
 ## Running Tau from a published image
 
-Images are published to the GitHub Container Registry for tagged releases and
-for `main`:
+Images are published to the GitHub Container Registry under the repository
+owner's namespace: tagged releases as `ghcr.io/<owner>/tau:<version>` and the
+latest build as `ghcr.io/<owner>/tau:latest`. For the upstream Tau repository:
 
 ```bash
 docker pull ghcr.io/huggingface/tau:latest
 ```
+
+For a fork, substitute the fork's owner, for example
+`ghcr.io/<your-name>/tau`.
 
 ## Caveats
 

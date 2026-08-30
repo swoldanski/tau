@@ -30,7 +30,8 @@ No Tau application code changes live here — only container assets, CI, and doc
   `tau --version`, `tau sessions`, `tau -p "/system"` (headless, no API key or
   network needed), and verifies the entrypoint's user mapping.
 - `.github/workflows/docker-publish.yml` — pushes `ghcr.io/<owner>/tau:<version>`
-  + `:latest` on `v*` tags and `:latest` on `main` (multi-arch amd64/arm64).
+  + `:latest` on `v*` tags and `:latest` on the `tau-in-docker` branch
+  (multi-arch amd64/arm64).
 - `website/content/guides/docker.md` — the published "Run Tau with Docker"
   guide.
 
