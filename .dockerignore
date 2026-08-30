@@ -1,0 +1,39 @@
+.git
+.gitignore
+.github
+
+# Docs and sources not needed by the runtime image
+.devcontainer
+.venv
+.venv/
+.platformio
+.pytest_cache
+.mypy_cache
+.ruff_cache
+__pycache__
+**/__pycache__/
+*.py[cod]
+
+# Repository content excluded from the TAU_SOURCE=local build context
+tests
+website
+dev-notes
+plans
+docs
+scripts
+examples
+landing.html
+
+# Build artifacts
+dist
+build
+*.egg-info
+*.whl
+uv.lock
+
+# Editor/OS noise
+*.swp
+.DS_Store
+
+# Local compose env
+docker/.env

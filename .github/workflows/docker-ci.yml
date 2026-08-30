@@ -1,0 +1,126 @@
+name: Docker CI
+
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "docker/**"
+      - "docker-compose.yml"
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/docker-ci.yml"
+  push:
+    branches:
+      - main
+      - tau-in-docker
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "docker/**"
+      - "docker-compose.yml"
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/docker-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TAU_VERSION: "0.4.1"
+
+jobs:
+  entrypoint-syntax:
+    name: Entrypoint shell syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Check shell syntax
+        run: sh -n docker/entrypoint.sh
+
+  image-pypi:
+    name: Image (PyPI install)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: tau:ci
+          build-args: |
+            TAU_SOURCE=pypi
+            TAU_VERSION=${{ env.TAU_VERSION }}
+          cache-from: type=gha,scope=tau-pypi
+          cache-to: type=gha,scope=tau-pypi,mode=max
+
+      - name: Verify version
+        run: |
+          version=$(docker run --rm tau:ci tau --version)
+          echo "$version"
+          echo "$version" | grep -q "$TAU_VERSION"
+
+      - name: Smoke test sessions command
+        run: docker run --rm tau:ci tau sessions
+
+      - name: Smoke test print-mode command (no provider/network)
+        run: docker run --rm -e OPENAI_API_KEY=ci-dummy tau:ci tau -p "/system"
+
+      - name: Verify entrypoint user mapping
+        run: |
+          docker run --rm -e PUID=1001 -e PGID=1001 tau:ci id
+          [ "$(docker run --rm -e PUID=1001 -e PGID=1001 tau:ci id -u)" = "1001" ]
+          [ "$(docker run --rm -e PUID=1001 -e PGID=1001 tau:ci id -g)" = "1001" ]
+
+      - name: Verify local tool dir is on PATH
+        run: |
+          docker run --rm tau:ci sh -c 'echo "$PATH"' | grep -q "/home/tau/.local/bin"
+
+      - name: Verify installed tools are usable without shell reload
+        run: |
+          docker run --rm tau:ci sh -c \
+            'printf "#!/bin/sh\necho tool-works\n" > /home/tau/.local/bin/demotool \
+             && chmod +x /home/tau/.local/bin/demotool \
+             && demotool' | grep -q tool-works
+
+  image-local:
+    name: Image (local source install)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: tau:ci-local
+          build-args: |
+            TAU_SOURCE=local
+          cache-from: type=gha,scope=tau-local
+          cache-to: type=gha,scope=tau-local,mode=max
+
+      - name: Verify version
+        run: docker run --rm tau:ci-local tau --version
+
+      - name: Smoke test print-mode command (no provider/network)
+        run: docker run --rm -e OPENAI_API_KEY=ci-dummy tau:ci-local tau -p "/system"

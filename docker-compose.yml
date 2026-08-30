@@ -1,0 +1,32 @@
+services:
+  tau:
+    image: tau
+    build:
+      context: .
+    stdin_open: true
+    tty: true
+    init: true
+    working_dir: /workspace
+    environment:
+      # Provider credentials (forwarded from the host environment or .env).
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+      # Host user mapping for file ownership on the mounted workspace.
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TERM: ${TERM:-xterm-256color}
+    volumes:
+      # The project Tau works on.
+      - .:/workspace
+      # Durable sessions, provider config, credentials, and model catalog.
+      - tau-home:/home/tau
+      # Optional: your personal skills/prompts, shared across all projects.
+      # - ~/.agents:/home/tau/.agents
+    env_file:
+      - path: docker/.env
+        required: false
+
+volumes:
+  tau-home:

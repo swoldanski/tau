@@ -24,6 +24,8 @@
       path: /guides/context/
     - label: Print mode & scripting
       path: /guides/print-mode/
+    - label: Run with Docker
+      path: /guides/docker/
     - label: Extensions
       path: /guides/extensions/
     - label: Themes

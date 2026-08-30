@@ -25,3 +25,7 @@ website/.hugo_build.lock
 .firecrawl/
 # Local scratch tooling
 scripts/analyze_session.py
+
+# Docker compose environment (see docker/.env.example)
+docker/.env
+.env
